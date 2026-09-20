@@ -1,0 +1,64 @@
+<html>
+    
+<body>
+    <h1>Expense Tracker</h1>
+    <p> Welcome to the Expense Tracker! here you can manage your expenses.</p>
+    <input id="amount" type="number" placeholder="Amount">
+    <input id="category" placeholder="Category">
+    <input id="description" placeholder="Description">
+    <button onclick="addExpense()">Add</button>
+
+    <div id="expenses"></div>
+    <script>
+
+        async function deleteExpense(id) {
+            await fetch("/expenses/" + id, {
+                method: "DELETE"
+            });
+            loadExpenses();
+        }
+
+
+        async function loadExpenses() {
+            const response = await fetch("/expenses");
+            const data = await response.json();
+
+            let html = "";
+            for (const item of data) {
+                html += `<p>${item.category}: $${item.amount.toFixed(2)} <button onclick="deleteExpense(${item.id})">Delete</button></p>`;
+            }
+
+            document.getElementById("expenses").innerHTML = html;
+        }
+        loadExpenses();
+
+
+
+
+        async function addExpense() {
+            const amount = document.getElementById("amount").value;
+            const category = document.getElementById("category").value;
+            const description = document.getElementById("description").value;
+
+            const response = await fetch("/expenses", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ amount: parseFloat(amount), category, description })
+            });
+
+            if (response.ok) {
+                document.getElementById("amount").value = "";  
+                document.getElementById("category").value = "";
+                document.getElementById("description").value = "";
+                loadExpenses();
+            } else {
+                alert("Failed to add expense");
+            }
+        }
+
+    </script>
+
+</body>
+</html>
