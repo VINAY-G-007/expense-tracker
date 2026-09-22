@@ -1,3 +1,28 @@
-venv/
-database.db
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Secrets
+.env
+
+# Test and tool caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local SQLite database (created automatically on first run)
+database.db

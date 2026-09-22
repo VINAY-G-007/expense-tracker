@@ -1,64 +1,447 @@
-<html>
-    
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expense Tracker</title>
+  <meta name="description" content="Track your expenses: add, edit and delete entries and see where your money goes.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>">
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --on-primary: #ffffff;
+      --danger: #dc2626;
+      --success: #15803d;
+      --input-bg: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --border: #334155;
+        --primary: #818cf8;
+        --primary-hover: #a5b4fc;
+        --on-primary: #0f172a;
+        --danger: #f87171;
+        --success: #4ade80;
+        --input-bg: #0f172a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    main { max-width: 900px; margin: 0 auto; padding: 32px 16px 48px; }
+    h1 { margin: 0; font-size: 1.9rem; }
+    h2 { margin: 0 0 12px; font-size: 1.1rem; }
+    .subtitle { margin: 4px 0 24px; color: var(--muted); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .stat-label { color: var(--muted); font-size: 0.85rem; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; overflow-wrap: anywhere; }
+    form { display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 12px; align-items: end; }
+    label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); min-width: 0; }
+    form input { width: 100%; }
+    input, select {
+      font: inherit;
+      color: var(--text);
+      background: var(--input-bg);
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-width: 0;
+    }
+    input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+    button {
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 9px 16px;
+      border: 1px solid transparent;
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+    button:hover { background: var(--primary-hover); }
+    button:disabled { opacity: 0.6; cursor: progress; }
+    button.ghost { background: transparent; color: var(--text); border-color: var(--border); font-weight: 500; }
+    button.ghost:hover { background: var(--bg); }
+    button.danger { color: var(--danger); }
+    .form-buttons { display: flex; gap: 8px; }
+    #message { margin: 12px 0 0; min-height: 1.5em; font-size: 0.9rem; }
+    #message.error { color: var(--danger); }
+    #message.success { color: var(--success); }
+    .list-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .list-header h2 { margin: 0; }
+    .list-header label { flex-direction: row; align-items: center; gap: 8px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+    th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td.actions { text-align: right; white-space: nowrap; }
+    td.actions button { padding: 5px 10px; font-size: 0.85rem; margin-left: 4px; }
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .muted { color: var(--muted); }
+    .empty { text-align: center; color: var(--muted); padding: 24px 0 8px; margin: 0; }
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 170px) 1fr 7.5rem;
+      gap: 12px;
+      align-items: center;
+      margin: 8px 0;
+      font-size: 0.9rem;
+    }
+    .bar { height: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; }
+    footer a { color: inherit; }
+    @media (max-width: 680px) {
+      main { padding: 20px 12px 40px; }
+      .card { padding: 16px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stats > div:first-child { grid-column: 1 / -1; }
+      form { grid-template-columns: 1fr 1fr; }
+      .wide, .form-buttons { grid-column: 1 / -1; }
+      .form-buttons button { flex: 1; }
+      .desc { display: none; }
+      th, td { padding: 8px 4px; }
+      td.actions button { padding: 4px 8px; margin-left: 2px; }
+      .bar-row { grid-template-columns: 1fr auto; gap: 4px 12px; }
+      .bar-row .bar { grid-column: 1 / -1; grid-row: 2; }
+    }
+  </style>
+</head>
 <body>
+  <main>
     <h1>Expense Tracker</h1>
-    <p> Welcome to the Expense Tracker! here you can manage your expenses.</p>
-    <input id="amount" type="number" placeholder="Amount">
-    <input id="category" placeholder="Category">
-    <input id="description" placeholder="Description">
-    <button onclick="addExpense()">Add</button>
+    <p class="subtitle">Add what you spend, fix mistakes, and see where your money goes.</p>
 
-    <div id="expenses"></div>
-    <script>
+    <section class="card stats" aria-label="Summary">
+      <div><div class="stat-label">Total spent</div><div class="stat-value" id="total">₹0.00</div></div>
+      <div><div class="stat-label">Expenses</div><div class="stat-value" id="count">0</div></div>
+      <div><div class="stat-label">Top category</div><div class="stat-value" id="top-category">–</div></div>
+    </section>
 
-        async function deleteExpense(id) {
-            await fetch("/expenses/" + id, {
-                method: "DELETE"
-            });
-            loadExpenses();
+    <section class="card">
+      <h2 id="form-title">Add an expense</h2>
+      <form id="expense-form" novalidate>
+        <label>Amount (₹)
+          <input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="250" required>
+        </label>
+        <label>Category
+          <input id="category" list="category-options" maxlength="50" placeholder="Food" autocomplete="off" required>
+        </label>
+        <label class="wide">Description (optional)
+          <input id="description" maxlength="200" placeholder="Lunch with friends">
+        </label>
+        <div class="form-buttons">
+          <button type="submit" id="submit-button">Add</button>
+          <button type="button" id="cancel-button" class="ghost" hidden>Cancel</button>
+        </div>
+      </form>
+      <datalist id="category-options"></datalist>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card">
+      <div class="list-header">
+        <h2>Your expenses</h2>
+        <label>Show
+          <select id="filter"><option value="">All categories</option></select>
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="desc">Description</th>
+              <th class="num">Amount</th>
+              <th><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="expense-rows"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="empty-message" hidden></p>
+    </section>
+
+    <section class="card">
+      <h2>Spending by category</h2>
+      <div id="breakdown"></div>
+    </section>
+
+    <footer>Built with FastAPI, SQLModel and SQLite · <a href="/docs">API docs</a></footer>
+  </main>
+
+  <script>
+    const DEFAULT_CATEGORIES = ["Food", "Travel", "Shopping", "Bills", "Rent", "Health", "Entertainment", "Education", "Other"];
+    const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
+
+    const form = document.getElementById("expense-form");
+    const amountInput = document.getElementById("amount");
+    const categoryInput = document.getElementById("category");
+    const descriptionInput = document.getElementById("description");
+    const submitButton = document.getElementById("submit-button");
+    const cancelButton = document.getElementById("cancel-button");
+    const formTitle = document.getElementById("form-title");
+    const message = document.getElementById("message");
+    const filterSelect = document.getElementById("filter");
+
+    let editingId = null; // id of the expense being edited, or null while adding
+
+    function showMessage(text, kind = "success") {
+      message.textContent = text;
+      message.className = kind;
+    }
+
+    // Call the API and return the JSON body. Throws an Error with a readable message on failure.
+    async function api(path, options = {}) {
+      const response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(errorText(body, response.status));
+      }
+      return body;
+    }
+
+    // Turn a FastAPI error response into one readable line.
+    function errorText(body, status) {
+      if (body && Array.isArray(body.detail)) {
+        return body.detail.map((err) => `${err.loc[err.loc.length - 1]}: ${err.msg}`).join(" · ");
+      }
+      if (body && typeof body.detail === "string") {
+        return body.detail;
+      }
+      return `Request failed (HTTP ${status})`;
+    }
+
+    // Small helpers that build table cells and buttons.
+    // They use textContent, never innerHTML, so text typed by the user can never run as HTML or JavaScript.
+    function cell(text, className = "") {
+      const td = document.createElement("td");
+      td.textContent = text;
+      td.className = className;
+      return td;
+    }
+
+    function makeButton(label, className, onClick) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.className = className;
+      button.addEventListener("click", onClick);
+      return button;
+    }
+
+    function renderExpenses(expenses) {
+      const rows = document.getElementById("expense-rows");
+      rows.replaceChildren();
+      for (const expense of [...expenses].reverse()) { // newest first
+        const categoryCell = document.createElement("td");
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = expense.category;
+        categoryCell.append(tag);
+
+        const actions = document.createElement("td");
+        actions.className = "actions";
+        actions.append(
+          makeButton("Edit", "ghost", () => startEditing(expense)),
+          makeButton("Delete", "ghost danger", (event) => deleteExpense(expense, event.currentTarget)),
+        );
+
+        const row = document.createElement("tr");
+        row.append(
+          categoryCell,
+          cell(expense.description || "—", expense.description ? "desc" : "desc muted"),
+          cell(money.format(expense.amount), "num"),
+          actions,
+        );
+        rows.append(row);
+      }
+
+      const emptyMessage = document.getElementById("empty-message");
+      emptyMessage.hidden = expenses.length > 0;
+      emptyMessage.textContent = filterSelect.value
+        ? `No expenses in "${filterSelect.value}".`
+        : "No expenses yet. Add your first one above.";
+    }
+
+    function renderSummary(summary) {
+      document.getElementById("total").textContent = money.format(summary.total);
+      document.getElementById("count").textContent = summary.count;
+      document.getElementById("top-category").textContent =
+        summary.by_category.length ? summary.by_category[0].category : "–";
+
+      // One bar per category, largest first.
+      const breakdown = document.getElementById("breakdown");
+      breakdown.replaceChildren();
+      if (summary.by_category.length === 0) {
+        const note = document.createElement("p");
+        note.className = "empty";
+        note.textContent = "Nothing to show yet.";
+        breakdown.append(note);
+      }
+      const largest = summary.by_category.length ? summary.by_category[0].total : 0;
+      for (const item of summary.by_category) {
+        const name = document.createElement("span");
+        name.textContent = `${item.category} (${item.count})`;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const fill = document.createElement("div");
+        fill.className = "bar-fill";
+        fill.style.width = `${largest ? (item.total / largest) * 100 : 0}%`;
+        bar.append(fill);
+        const amount = document.createElement("span");
+        amount.className = "num";
+        amount.textContent = money.format(item.total);
+        const row = document.createElement("div");
+        row.className = "bar-row";
+        row.append(name, bar, amount);
+        breakdown.append(row);
+      }
+
+      // Keep the filter list in step with the categories that exist.
+      const selected = filterSelect.value;
+      filterSelect.replaceChildren(new Option("All categories", ""));
+      for (const item of summary.by_category) {
+        filterSelect.append(new Option(item.category, item.category));
+      }
+      filterSelect.value = summary.by_category.some((item) => item.category === selected) ? selected : "";
+
+      // Suggest the usual categories plus any the user has already used.
+      const suggestions = new Set([...DEFAULT_CATEGORIES, ...summary.by_category.map((item) => item.category)]);
+      document.getElementById("category-options").replaceChildren(...[...suggestions].map((name) => new Option(name)));
+    }
+
+    async function refresh() {
+      try {
+        renderSummary(await api("/expenses/summary")); // may reset the filter if its category is gone
+        const category = filterSelect.value;
+        const query = category ? `?category=${encodeURIComponent(category)}` : "";
+        renderExpenses(await api(`/expenses${query}`));
+      } catch (error) {
+        showMessage(`Could not load expenses: ${error.message}`, "error");
+      }
+    }
+
+    function resetForm() {
+      editingId = null;
+      form.reset();
+      formTitle.textContent = "Add an expense";
+      submitButton.textContent = "Add";
+      cancelButton.hidden = true;
+    }
+
+    function startEditing(expense) {
+      editingId = expense.id;
+      amountInput.value = expense.amount;
+      categoryInput.value = expense.category;
+      descriptionInput.value = expense.description;
+      formTitle.textContent = "Edit expense";
+      submitButton.textContent = "Save changes";
+      cancelButton.hidden = false;
+      showMessage("");
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      amountInput.focus();
+    }
+
+    async function deleteExpense(expense, button) {
+      button.disabled = true; // a double click must not send two deletes
+      try {
+        await api(`/expenses/${expense.id}`, { method: "DELETE" });
+        if (editingId === expense.id) {
+          resetForm();
         }
+        showMessage(`Deleted the ${expense.category} expense of ${money.format(expense.amount)}.`);
+        await refresh();
+      } catch (error) {
+        showMessage(error.message, "error");
+        button.disabled = false;
+      }
+    }
 
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const amount = Number(amountInput.value);
+      const category = categoryInput.value.trim();
+      const description = descriptionInput.value.trim();
 
-        async function loadExpenses() {
-            const response = await fetch("/expenses");
-            const data = await response.json();
+      if (!amountInput.value || !(amount > 0)) {
+        showMessage("Enter an amount greater than 0.", "error");
+        amountInput.focus();
+        return;
+      }
+      if (!category) {
+        showMessage("Enter a category, for example Food.", "error");
+        categoryInput.focus();
+        return;
+      }
 
-            let html = "";
-            for (const item of data) {
-                html += `<p>${item.category}: $${item.amount.toFixed(2)} <button onclick="deleteExpense(${item.id})">Delete</button></p>`;
-            }
-
-            document.getElementById("expenses").innerHTML = html;
+      const body = JSON.stringify({ amount, category, description });
+      submitButton.disabled = true; // a double click must not save the expense twice
+      showMessage("Saving…", "");
+      try {
+        if (editingId === null) {
+          await api("/expenses", { method: "POST", body });
+          showMessage("Expense added.");
+        } else {
+          await api(`/expenses/${editingId}`, { method: "PUT", body });
+          showMessage("Changes saved.");
         }
-        loadExpenses();
+        resetForm();
+        amountInput.focus(); // ready for the next expense
+        await refresh();
+      } catch (error) {
+        showMessage(error.message, "error");
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
 
+    cancelButton.addEventListener("click", () => {
+      resetForm();
+      showMessage("");
+    });
+    filterSelect.addEventListener("change", refresh);
 
-
-
-        async function addExpense() {
-            const amount = document.getElementById("amount").value;
-            const category = document.getElementById("category").value;
-            const description = document.getElementById("description").value;
-
-            const response = await fetch("/expenses", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ amount: parseFloat(amount), category, description })
-            });
-
-            if (response.ok) {
-                document.getElementById("amount").value = "";  
-                document.getElementById("category").value = "";
-                document.getElementById("description").value = "";
-                loadExpenses();
-            } else {
-                alert("Failed to add expense");
-            }
-        }
-
-    </script>
-
+    refresh();
+  </script>
 </body>
 </html>
